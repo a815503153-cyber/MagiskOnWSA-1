@@ -66,13 +66,13 @@ on:
 
 jobs:
   matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Generate build matrix
         id: set-matrix
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             let matrix = {};
@@ -92,12 +92,15 @@ jobs:
 
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
     needs: matrix
     strategy:
       matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
     steps:
       - name: Clone repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v7
       - name: Create archive from repository
         run: |
           sudo tar -cf /tmp/repo.tar .
@@ -711,7 +714,7 @@ jobs:
           fi
           echo "artifact_name=WSA${name1}${name2}_${{ env.WSA_VER }}_${{ matrix.arch }}_${{ env.WSA_REL }}" >> $GITHUB_ENV
       - name: Upload WSA
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.artifact_name }}
           path: "./${{ matrix.arch }}/*"
@@ -720,5 +723,5 @@ jobs:
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
+          retain_days: 7
+          keep_minimum_runs: 5
